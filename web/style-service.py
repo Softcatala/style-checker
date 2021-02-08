@@ -20,8 +20,8 @@
 
 
 from __future__ import print_function
-from flask import Flask, request, Response
-from flask_cors import CORS, cross_origin
+import uvicorn
+from fastapi import FastAPI, Form, Request
 import json
 
 import sys
@@ -32,23 +32,25 @@ from analyzer import Analyzer
 from document import Document
 
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
+
 
 def json_answer(data, status = 200):
     json_data = json.dumps(data, indent=4, separators=(',', ': '))
-    resp = Response(json_data, mimetype='application/json', status = status)
-    resp.headers['Access-Control-Allow-Origin'] = '*'
-    return resp
+    return json_data
+#    resp = Response(json_data, mimetype='application/json', status = status)
+#    resp.headers['Access-Control-Allow-Origin'] = '*'
+#    return resp
    
 
-@app.route('/metrics', methods=['GET'])
-def metrics_api():
+@app.get('/metrics')
+async def metrics_api(text: str):
 
-    text = request.args.get('text')
+#    text = request.args.get('text')
     document = Document(text)
     result = Analyzer(document).get_metrics()
-    return json_answer(result)
+    return result
+#    return json_answer(result)
 
 @app.route('/check', methods=['GET'])
 def check_api():
@@ -60,6 +62,4 @@ def check_api():
 
 
 if __name__ == '__main__':
-    app.debug = True
-    app.run()
-
+    uvicorn.run('style-service:app', host='0.0.0.0', port=5000)
